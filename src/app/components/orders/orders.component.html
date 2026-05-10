@@ -2,147 +2,174 @@
 
   <app-navbar />
 
-  <div class="orders-header">
-    <div class="orders-header-left">
-      <button class="btn-back" (click)="goBack()">← {{ 'orders.header.back' | transloco }}</button>
-      <h1 class="orders-title">{{ 'orders.header.title' | transloco }}</h1>
-    </div>
-    <p class="orders-subtitle">{{ 'orders.header.subtitle' | transloco }}</p>
-  </div>
-
   @if (errorMessage()) {
     <div class="alert-error">{{ errorMessage() }}</div>
   }
 
-  @if (isLoading()) {
-    <div class="orders-loading">{{ 'orders.states.loading' | transloco }}</div>
-  } @else if (orders().length === 0) {
+  <div class="orders-page">
 
-    <div class="orders-empty">
-      <p class="empty-text">{{ 'orders.states.empty' | transloco }}</p>
-      <a routerLink="/" class="btn-browse">{{ 'orders.states.browse' | transloco }} →</a>
-    </div>
+    <!-- ── RAIL ── -->
+    <aside class="rail">
+      <button class="btn-back" (click)="goBack()">← {{ 'orders.header.back' | transloco }}</button>
 
-  } @else {
+      <h1 class="orders-heading">
+        {{ 'orders.rail.heading_plain' | transloco }}
+        <em>{{ 'orders.rail.heading_em' | transloco }}</em>
+      </h1>
 
-    <div class="orders-toolbar">
-      <div class="filter-bar">
-        <button class="filter-btn" [class.active]="activeFilter() === 'ALL'" (click)="setFilter('ALL')">
-          {{ 'orders.filter.all' | transloco }}
-        </button>
-        @for (status of filterStatuses; track status) {
-          <button class="filter-btn" [class.active]="activeFilter() === status" (click)="setFilter(status)">
-            {{ 'orders.filter.' + mapStatus(status) | transloco }}
+      @if (!isLoading() && orders().length > 0) {
+        <div class="summary">
+          <div class="summary-row">
+            <span class="summary-key">{{ 'orders.summary.open' | transloco }}</span>
+            <span class="summary-val">{{ openCount() }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-key">{{ 'orders.summary.this_year' | transloco }}</span>
+            <span class="summary-val">{{ yearCount() }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-key">{{ 'orders.summary.spent' | transloco }} · {{ currentYear }}</span>
+            <span class="summary-val">€{{ totalSpent() | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="filter-section">
+        <div class="section-label">· {{ 'orders.rail.filter' | transloco }} ·</div>
+        <div class="pill-group">
+          <button class="pill" [class.active]="activeFilter() === 'ALL'" (click)="setFilter('ALL')">
+            <span>{{ 'orders.filter.all' | transloco }}</span>
+            <span class="pill-count">{{ getCount('ALL') }}</span>
           </button>
-        }
-      </div>
-      <select class="sort-select" [value]="sortKey()" (change)="setSort($event)">
-        <option value="date_desc">{{ 'orders.sort.date_desc' | transloco }}</option>
-        <option value="date_asc">{{ 'orders.sort.date_asc' | transloco }}</option>
-        <option value="total_desc">{{ 'orders.sort.total_desc' | transloco }}</option>
-        <option value="total_asc">{{ 'orders.sort.total_asc' | transloco }}</option>
-      </select>
-    </div>
-
-    @if (filteredOrders().length === 0) {
-      <div class="orders-empty">
-        <p class="empty-text">{{ 'orders.states.no_match' | transloco }}</p>
-        <button class="btn-browse" (click)="setFilter('ALL')">{{ 'orders.filter.all' | transloco }} →</button>
-      </div>
-    } @else {
-
-    <div class="orders-list">
-      @for (order of filteredOrders(); track order.id) {
-
-        <div class="order-card">
-
-          <div class="order-card-header">
-            <div class="order-card-id">
-              <a class="order-number" [routerLink]="['/orders', order.id]">
-                {{ 'orders.card.order_number' | transloco }} {{ order.visibleId }} →
-              </a>
-              <span class="order-date">{{ order.createdAt | date:'dd MMM yyyy, HH:mm' }}</span>
-            </div>
-            <span class="status-tag" [ngClass]="statusClass(order.status)">
-              {{ statusLabel(order.status) }}
-            </span>
-          </div>
-
-          @if (order.status !== 'CANCELLED') {
-            <div class="order-timeline">
-
-              <div class="timeline-step"
-                   [class.active]="isStepActive(order.status, 'pending')"
-                   [class.done]="isStepDone(order.status, 'pending')">
-                <div class="dot"></div>
-                <span>{{ 'orders.timeline.pending' | transloco }}</span>
-              </div>
-
-              <div class="timeline-step"
-                   [class.active]="isStepActive(order.status, 'confirmed')"
-                   [class.done]="isStepDone(order.status, 'confirmed')">
-                <div class="dot"></div>
-                <span>{{ 'orders.timeline.confirmed' | transloco }}</span>
-              </div>
-
-              <div class="timeline-step"
-                   [class.active]="isStepActive(order.status, 'ready')"
-                   [class.done]="isStepDone(order.status, 'ready')">
-                <div class="dot"></div>
-                <span>{{ 'orders.timeline.ready' | transloco }}</span>
-              </div>
-
-              <div class="timeline-step"
-                   [class.active]="isStepActive(order.status, 'delivered')"
-                   [class.done]="isStepDone(order.status, 'delivered')">
-                <div class="dot"></div>
-                <span>{{ 'orders.timeline.delivered' | transloco }}</span>
-              </div>
-
-            </div>
+          @for (status of filterStatuses; track status) {
+            <button class="pill" [class.active]="activeFilter() === status" (click)="setFilter(status)">
+              <span>{{ 'orders.filter.' + mapStatus(status) | transloco }}</span>
+              <span class="pill-count">{{ getCount(status) }}</span>
+            </button>
           }
+        </div>
+      </div>
 
-          <div class="order-lines">
-            @for (line of order.lines; track line.id) {
-              <div class="order-line">
-                <div class="line-main">
-                  <span class="line-name">{{ line.productName | dbTranslate:'PRODUCTS' | transloco }}</span>
-                  <span class="line-variety">{{ line.productVariety | dbTranslate:'VARIETIES' | transloco }}</span>
-                </div>
-                <div class="line-meta">
-                  <span class="line-qty">× {{ line.quantity }}</span>
-                  <span class="line-subtotal">{{ line.subtotal | number:'1.2-2' }} €</span>
-                </div>
-              </div>
-            }
-          </div>
+      <div class="filter-section">
+        <div class="section-label">· {{ 'orders.rail.sort' | transloco }} ·</div>
+        <select class="sort-select" [value]="sortKey()" (change)="setSort($event)">
+          <option value="date_desc">{{ 'orders.sort.date_desc' | transloco }}</option>
+          <option value="date_asc">{{ 'orders.sort.date_asc' | transloco }}</option>
+          <option value="total_desc">{{ 'orders.sort.total_desc' | transloco }}</option>
+          <option value="total_asc">{{ 'orders.sort.total_asc' | transloco }}</option>
+        </select>
+      </div>
+    </aside>
 
-          <div class="order-footer">
-            <span class="order-total">{{ order.total | number:'1.2-2' }} €</span>
+    <!-- ── LIST PANE ── -->
+    <section class="list-pane">
 
-            @if (canCancel(order)) {
-              <button
-                class="btn-cancel"
-                (click)="cancelOrder(order.id)"
-                [disabled]="cancellingId() === order.id">
+      @if (isLoading()) {
+        <div class="orders-loading">{{ 'orders.states.loading' | transloco }}</div>
 
-                @if (cancellingId() === order.id) {
-                  {{ 'orders.card.cancelling' | transloco }}
-                } @else {
-                  {{ 'orders.card.cancel_btn' | transloco }}
-                }
-
-              </button>
-            }
-          </div>
-
+      } @else if (orders().length === 0) {
+        <div class="orders-empty">
+          <p class="empty-text">{{ 'orders.states.empty' | transloco }}</p>
+          <a routerLink="/" class="btn-browse">{{ 'orders.states.browse' | transloco }} →</a>
         </div>
 
+      } @else {
+
+        <div class="list-header">
+          <span class="crumb">
+            {{ filterI18nKey() | transloco }} · {{ filteredOrders().length }} {{ 'orders.header.results' | transloco }}
+          </span>
+          <span class="total-line">
+            {{ 'orders.header.total_spent' | transloco }} <em>€{{ totalSpent() | number:'1.2-2' }}</em>
+          </span>
+        </div>
+
+        @if (filteredOrders().length === 0) {
+          <div class="orders-empty">
+            <p class="empty-text">{{ 'orders.states.no_match' | transloco }}</p>
+            <button class="btn-browse" (click)="setFilter('ALL')">{{ 'orders.filter.all' | transloco }} →</button>
+          </div>
+        } @else {
+
+          <div class="order-list">
+            @for (order of filteredOrders(); track order.id) {
+
+              <div class="order-row" [class.is-cancelled]="order.status === 'CANCELLED'">
+
+                <!-- META -->
+                <div class="order-meta">
+                  <a class="order-id" [routerLink]="['/orders', order.id]">#{{ order.visibleId }} →</a>
+                  <div class="order-date">{{ order.createdAt | date:'EEE · dd MMM yyyy · HH:mm' }}</div>
+                  <div class="status-badge" [ngClass]="statusClass(order.status)">
+                    <span class="dot"></span>{{ statusLabel(order.status) }}
+                  </div>
+                </div>
+
+                <!-- BODY -->
+                <div class="order-body">
+                  @if (order.status !== 'CANCELLED') {
+                    <div class="order-timeline">
+                      @for (step of steps; track step) {
+                        <div class="timeline-step"
+                             [class.done]="isStepDone(order.status, step)"
+                             [class.active]="isStepActive(order.status, step)">
+                          <div class="dot"></div>
+                          <span>{{ 'orders.timeline.' + step | transloco }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  <div class="order-lines">
+                    @for (line of order.lines; track line.id; let last = $last) {
+                      <span class="line">
+                        <span class="qty">×{{ line.quantity }}</span>
+                        <span class="name">{{ line.productName | dbTranslate:'PRODUCTS' | transloco }}</span>
+                        @if (line.productVariety) {
+                          <span class="var">{{ line.productVariety | dbTranslate:'VARIETIES' | transloco }}</span>
+                        }
+                      </span>
+                      @if (!last) { <span class="sep">·</span> }
+                    }
+                  </div>
+                </div>
+
+                <!-- TOTALS -->
+                <div class="order-totals">
+                  <div class="totals-info">
+                    <div class="total-lbl">
+                      {{ (order.status === 'CANCELLED' ? 'orders.totals.refunded' : 'orders.totals.total') | transloco }}
+                    </div>
+                    <div class="total-amt" [class.muted]="order.status === 'CANCELLED'">
+                      €{{ order.total | number:'1.2-2' }}
+                    </div>
+                    <div class="total-meta">
+                      {{ totalLines(order) }} {{ 'orders.totals.items' | transloco }} · {{ totalUnits(order) }} {{ 'orders.totals.units' | transloco }}
+                    </div>
+                  </div>
+                  @if (canCancel(order)) {
+                    <button class="btn-cancel"
+                            (click)="cancelOrder(order.id)"
+                            [disabled]="cancellingId() === order.id">
+                      @if (cancellingId() === order.id) {
+                        {{ 'orders.card.cancelling' | transloco }}
+                      } @else {
+                        {{ 'orders.card.cancel_btn' | transloco }}
+                      }
+                    </button>
+                  }
+                </div>
+
+              </div>
+
+            }
+          </div>
+
+        }
+
       }
-    </div>
 
-    }
+    </section>
 
-  }
+  </div>
 
 </div>

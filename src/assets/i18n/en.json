@@ -71,9 +71,11 @@
 
   "orders": {
     "header": {
-      "back": "Back",
+      "back": "Back to catalogue",
       "title": "My Orders",
-      "subtitle": "Follow your orders from field to door"
+      "subtitle": "Follow your orders from field to door",
+      "total_spent": "Total spent",
+      "results": "results"
     },
     "states": {
       "loading": "Loading your orders...",
@@ -87,7 +89,7 @@
       "all": "All",
       "pending": "Pending",
       "confirmed": "Confirmed",
-      "ready": "Ready",
+      "ready": "Ready for pickup",
       "delivered": "Delivered",
       "cancelled": "Cancelled"
     },
@@ -96,6 +98,23 @@
       "date_asc": "Oldest first",
       "total_desc": "Highest total",
       "total_asc": "Lowest total"
+    },
+    "rail": {
+      "heading_plain": "Your",
+      "heading_em": "orders.",
+      "filter": "Filter",
+      "sort": "Sort"
+    },
+    "summary": {
+      "open": "Open",
+      "this_year": "This year",
+      "spent": "Spent"
+    },
+    "totals": {
+      "total": "Total",
+      "refunded": "Refunded",
+      "items": "items",
+      "units": "units"
     },
     "timeline": {
       "pending": "Pending",

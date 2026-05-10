@@ -69,9 +69,11 @@
   },
   "orders": {
     "header": {
-      "back": "Atrás",
+      "back": "Volver al catálogo",
       "title": "Mis pedidos",
-      "subtitle": "Sigue el estado de tus pedidos del campo a tu puerta"
+      "subtitle": "Sigue el estado de tus pedidos del campo a tu puerta",
+      "total_spent": "Total gastado",
+      "results": "resultados"
     },
     "states": {
       "loading": "Cargando tus pedidos...",
@@ -85,7 +87,7 @@
       "all": "Todos",
       "pending": "Pendientes",
       "confirmed": "Confirmados",
-      "ready": "Listos",
+      "ready": "Listo para recoger",
       "delivered": "Entregados",
       "cancelled": "Cancelados"
     },
@@ -94,6 +96,23 @@
       "date_asc": "Más antiguo",
       "total_desc": "Mayor importe",
       "total_asc": "Menor importe"
+    },
+    "rail": {
+      "heading_plain": "Tus",
+      "heading_em": "pedidos.",
+      "filter": "Filtrar",
+      "sort": "Ordenar"
+    },
+    "summary": {
+      "open": "Abiertos",
+      "this_year": "Este año",
+      "spent": "Gastado"
+    },
+    "totals": {
+      "total": "Total",
+      "refunded": "Devuelto",
+      "items": "ítems",
+      "units": "uds."
     },
     "timeline": {
       "pending": "Pendiente",

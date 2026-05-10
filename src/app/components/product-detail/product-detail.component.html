@@ -50,6 +50,10 @@
         <h1 class="product-name">{{ product.name | dbTranslate:'PRODUCTS' | transloco }}</h1>
         <p class="product-variety">{{ product.variety | dbTranslate:'VARIETIES' | transloco }}</p>
 
+        @if (product.description) {
+          <p class="product-description">{{ product.description }}</p>
+        }
+
         <hr class="divider" />
 
         <!-- PRICE + STEPPER -->

@@ -51,12 +51,44 @@ export class OrdersComponent implements OnInit {
     });
   });
 
+  readonly openCount = computed(() =>
+    this.orders().filter(o => ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'].includes(o.status)).length
+  );
+
+  readonly currentYear = new Date().getFullYear();
+
+  readonly yearCount = computed(() =>
+    this.orders().filter(o => new Date(o.createdAt).getFullYear() === this.currentYear).length
+  );
+
+  readonly totalSpent = computed(() =>
+    this.orders()
+      .filter(o => o.status !== 'CANCELLED' && new Date(o.createdAt).getFullYear() === this.currentYear)
+      .reduce((sum, o) => sum + o.total, 0)
+  );
+
+  readonly statusCounts = computed(() => {
+    const m = new Map<string, number>([['ALL', this.orders().length]]);
+    for (const o of this.orders()) {
+      m.set(o.status, (m.get(o.status) ?? 0) + 1);
+    }
+    return m;
+  });
+
   readonly filterStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'DELIVERED', 'CANCELLED'];
 
   public steps = ['pending', 'confirmed', 'ready', 'delivered'];
 
   setFilter(status: FilterStatus) { this.activeFilter.set(status); }
   setSort(event: Event) { this.sortKey.set((event.target as HTMLSelectElement).value as SortKey); }
+
+  getCount(status: FilterStatus): number { return this.statusCounts().get(status) ?? 0; }
+  filterI18nKey(): string {
+    const f = this.activeFilter();
+    return f === 'ALL' ? 'orders.filter.all' : `orders.filter.${this.mapStatus(f)}`;
+  }
+  totalLines(order: Order): number { return order.lines.length; }
+  totalUnits(order: Order): number { return order.lines.reduce((s, l) => s + l.quantity, 0); }
 
   ngOnInit() {
     this.loadOrders();

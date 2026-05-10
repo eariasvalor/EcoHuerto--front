@@ -47,6 +47,9 @@
           <div class="card-body">
             <a class="card-name" [routerLink]="['/products', product.id]">{{ product.name | dbTranslate:'PRODUCTS' | transloco }}</a>
             <p class="card-variety">{{ product.variety | dbTranslate:'VARIETIES' | transloco }}</p>
+            @if (product.description) {
+              <p class="card-description">{{ product.description }}</p>
+            }
             
             <div class="card-footer-row">
               <div class="card-price">

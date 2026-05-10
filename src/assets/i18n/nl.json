@@ -69,9 +69,11 @@
   },
   "orders": {
     "header": {
-      "back": "Terug",
+      "back": "Terug naar catalogus",
       "title": "Mijn bestellingen",
-      "subtitle": "Volg je bestellingen van het veld tot aan je deur"
+      "subtitle": "Volg je bestellingen van het veld tot aan je deur",
+      "total_spent": "Totaal besteed",
+      "results": "resultaten"
     },
     "states": {
       "loading": "Je bestellingen laden...",
@@ -85,7 +87,7 @@
       "all": "Alles",
       "pending": "In afwachting",
       "confirmed": "Bevestigd",
-      "ready": "Klaar",
+      "ready": "Klaar voor ophalen",
       "delivered": "Bezorgd",
       "cancelled": "Geannuleerd"
     },
@@ -94,6 +96,23 @@
       "date_asc": "Oudste eerst",
       "total_desc": "Hoogste bedrag",
       "total_asc": "Laagste bedrag"
+    },
+    "rail": {
+      "heading_plain": "Jouw",
+      "heading_em": "bestellingen.",
+      "filter": "Filter",
+      "sort": "Sorteren"
+    },
+    "summary": {
+      "open": "Open",
+      "this_year": "Dit jaar",
+      "spent": "Besteed"
+    },
+    "totals": {
+      "total": "Totaal",
+      "refunded": "Terugbetaald",
+      "items": "items",
+      "units": "stuks"
     },
     "timeline": {
       "pending": "In afwachting",
