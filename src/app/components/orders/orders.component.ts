@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
@@ -7,11 +7,15 @@ import { Order, OrderStatus } from '../../core/model/order.model';
 import { Location } from '@angular/common';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { DbTranslatePipe } from '../../core/pipes/db-translate.pipe';
+
+type SortKey = 'date_desc' | 'date_asc' | 'total_desc' | 'total_asc';
+type FilterStatus = OrderStatus | 'ALL';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent, TranslocoModule],
+  imports: [CommonModule, RouterLink, NavbarComponent, TranslocoModule, DbTranslatePipe],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -27,8 +31,64 @@ export class OrdersComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly cancellingId = signal<string | null>(null);
 
-  // 🔥 Backend actual
+  readonly activeFilter = signal<FilterStatus>('ALL');
+  readonly sortKey = signal<SortKey>('date_desc');
+
+  readonly filteredOrders = computed(() => {
+    let list = this.orders();
+    const f = this.activeFilter();
+    if (f !== 'ALL') {
+      list = list.filter(o => o.status === f);
+    }
+    const s = this.sortKey();
+    return [...list].sort((a, b) => {
+      switch (s) {
+        case 'date_desc': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'date_asc':  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'total_desc': return b.total - a.total;
+        case 'total_asc':  return a.total - b.total;
+      }
+    });
+  });
+
+  readonly openCount = computed(() =>
+    this.orders().filter(o => ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'].includes(o.status)).length
+  );
+
+  readonly currentYear = new Date().getFullYear();
+
+  readonly yearCount = computed(() =>
+    this.orders().filter(o => new Date(o.createdAt).getFullYear() === this.currentYear).length
+  );
+
+  readonly totalSpent = computed(() =>
+    this.orders()
+      .filter(o => o.status !== 'CANCELLED' && new Date(o.createdAt).getFullYear() === this.currentYear)
+      .reduce((sum, o) => sum + o.total, 0)
+  );
+
+  readonly statusCounts = computed(() => {
+    const m = new Map<string, number>([['ALL', this.orders().length]]);
+    for (const o of this.orders()) {
+      m.set(o.status, (m.get(o.status) ?? 0) + 1);
+    }
+    return m;
+  });
+
+  readonly filterStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'DELIVERED', 'CANCELLED'];
+
   public steps = ['pending', 'confirmed', 'ready', 'delivered'];
+
+  setFilter(status: FilterStatus) { this.activeFilter.set(status); }
+  setSort(event: Event) { this.sortKey.set((event.target as HTMLSelectElement).value as SortKey); }
+
+  getCount(status: FilterStatus): number { return this.statusCounts().get(status) ?? 0; }
+  filterI18nKey(): string {
+    const f = this.activeFilter();
+    return f === 'ALL' ? 'orders.filter.all' : `orders.filter.${this.mapStatus(f)}`;
+  }
+  totalLines(order: Order): number { return order.lines.length; }
+  totalUnits(order: Order): number { return order.lines.reduce((s, l) => s + l.quantity, 0); }
 
   ngOnInit() {
     this.loadOrders();
@@ -81,24 +141,12 @@ export class OrdersComponent implements OnInit {
 
   mapStatus(status: string): string {
     switch (status.toUpperCase()) {
-
-      case 'PENDING':
-        return 'pending';
-
-      case 'CONFIRMED':
-        return 'confirmed';
-
-      case 'READY_FOR_PICKUP':
-        return 'ready';
-
-      case 'DELIVERED':
-        return 'delivered';
-
-      case 'CANCELLED':
-        return 'pending';
-
-      default:
-        return 'pending';
+      case 'PENDING':       return 'pending';
+      case 'CONFIRMED':     return 'confirmed';
+      case 'READY_FOR_PICKUP': return 'ready';
+      case 'DELIVERED':     return 'delivered';
+      case 'CANCELLED':     return 'cancelled';
+      default:              return 'pending';
     }
   }
 

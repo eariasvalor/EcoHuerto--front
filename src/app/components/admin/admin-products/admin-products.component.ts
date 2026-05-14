@@ -32,11 +32,12 @@ export class AdminProductsComponent implements OnInit {
   readonly isSubmitting = signal(false);
 
   readonly form = this.fb.group({
-    name:      ['', [Validators.required, Validators.minLength(2)]],
-    varietyId: ['', Validators.required],
-    price:     [0, [Validators.required, Validators.min(0.01)]],
-    unit:      ['KG', Validators.required],
-    stock:     [0, [Validators.required, Validators.min(0)]]
+    name:        ['', [Validators.required, Validators.minLength(2)]],
+    varietyId:   ['', Validators.required],
+    price:       [0, [Validators.required, Validators.min(0.01)]],
+    unit:        ['KG', Validators.required],
+    stock:       [0, [Validators.required, Validators.min(0)]],
+    description: ['']
   });
 
   readonly stockForm = this.fb.group({
@@ -78,11 +79,12 @@ export class AdminProductsComponent implements OnInit {
   openEditModal(product: Product) {
     this.editingProduct.set(product);
     this.form.patchValue({
-      name: product.name,
-      varietyId: product.varietyId,
-      price: product.price,
-      unit: product.unit,
-      stock: product.stock
+      name:        product.name,
+      varietyId:   product.varietyId,
+      price:       product.price,
+      unit:        product.unit,
+      stock:       product.stock,
+      description: product.description ?? ''
     });
     this.showModal.set(true);
     this.errorMessage.set(null);
@@ -161,9 +163,10 @@ export class AdminProductsComponent implements OnInit {
     });
   }
 
-  get name() { return this.form.get('name'); }
-  get varietyId() { return this.form.get('varietyId'); }
-  get price() { return this.form.get('price'); }
-  get unit() { return this.form.get('unit'); }
-  get stock() { return this.form.get('stock'); }
+  get name()        { return this.form.get('name'); }
+  get varietyId()   { return this.form.get('varietyId'); }
+  get price()       { return this.form.get('price'); }
+  get unit()        { return this.form.get('unit'); }
+  get stock()       { return this.form.get('stock'); }
+  get description() { return this.form.get('description'); }
 }

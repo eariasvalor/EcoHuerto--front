@@ -12,6 +12,7 @@ export interface Product {
   stock: number;
   available: boolean;
   image: string;
+  description?: string;
 }
 
 export interface PageResponse<T> {

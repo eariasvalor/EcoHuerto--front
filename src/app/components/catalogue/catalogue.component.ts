@@ -1,42 +1,33 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule, DecimalPipe, LowerCasePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ProductService } from '../../core/services/product.service';
-import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Product } from '../../core/model/product.model';
 import { getProductImage } from '../../core/utils/product-image.util';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
-import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { TranslocoModule } from '@ngneat/transloco';
 import { CartService } from '../../core/services/cart-service';
-
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
+import { DbTranslatePipe } from '../../core/pipes/db-translate.pipe';
 
 @Component({
   selector: 'app-catalogue',
   standalone: true,
-  imports: [CommonModule, NavbarComponent, TranslocoModule],
+  imports: [CommonModule, RouterLink, NavbarComponent, TranslocoModule, DbTranslatePipe],
   templateUrl: './catalogue.component.html',
   styleUrl: './catalogue.component.scss'
 })
 export class CatalogueComponent implements OnInit {
 
-  private readonly transloco = inject(TranslocoService);
-
   private readonly productService = inject(ProductService);
-  private readonly orderService = inject(OrderService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly cartService = inject(CartService);
 
+  readonly today = new Date();
+
   readonly products = signal<Product[]>([]);
-  readonly cart = signal<Map<string, number>>(new Map());
   readonly isLoading = signal(true);
-  readonly isOrdering = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly selectedCategory = signal<string>('All');
@@ -52,64 +43,7 @@ export class CatalogueComponent implements OnInit {
     return this.products().filter(p => p.category === cat);
   });
 
-  readonly cartTotal = computed(() => {
-    let total = 0;
-    this.cart().forEach((qty, productId) => {
-      const product = this.products().find(p => p.id === productId);
-      if (product) total += product.price * qty;
-    });
-    return total.toFixed(2);
-  });
-
-  readonly cartItemCount = computed(() => {
-    let count = 0;
-    this.cart().forEach(qty => count += qty);
-    return count;
-  });
-
-  readonly hasItemsInCart = computed(() => this.cartItemCount() > 0);
-
   readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
-
-  readonly isMobile = signal(window.innerWidth < 768);
-
-  readonly viewMode = signal<'1' | '2' | 'grid'>(
-    window.innerWidth < 768 ? '1' : 'grid'
-  );
-
-  constructor() {
-    const mobile = window.innerWidth < 768;
-    this.isMobile.set(mobile);
-  
-    this.viewMode.set(mobile ? '1' : 'grid');
-  
-    window.addEventListener('resize', () => {
-      const mobileNow = window.innerWidth < 768;
-      this.isMobile.set(mobileNow);
-  
-      if (mobileNow) {
-        if (this.viewMode() === 'grid') {
-          this.viewMode.set('1');
-        }
-      } else {
-        if (this.viewMode() !== 'grid') {
-          this.viewMode.set('grid');
-        }
-      }
-    });
-  }
-
-
-setView(mode: '1' | '2' | 'grid') {
-
-
-  if (this.isMobile()) {
-    if (mode === 'grid') return;
-  } else {
-  }
-
-  this.viewMode.set(mode);
-}
 
   ngOnInit() {
     this.loadProducts();
@@ -129,14 +63,20 @@ setView(mode: '1' | '2' | 'grid') {
     });
   }
 
-  getImage(product: Product): string {
-    return getProductImage(product.variety, product.category);
+  getCategoryClass(category: string): string {
+    const c = category.toLowerCase();
+    if (c.includes('tomat')) return 'tomato';
+    if (c.includes('green') || c.includes('verde') || c.includes('lech') || c.includes('espin')) return 'green';
+    if (c.includes('pepper') || c.includes('pimient')) return 'pepper';
+    if (c.includes('herb') || c.includes('hierba') || c.includes('basil') || c.includes('albahaca')) return 'herb';
+    if (c.includes('root') || c.includes('raiz') || c.includes('raíz') || c.includes('zanahor') || c.includes('carrot')) return 'root';
+    return 'default';
   }
 
   getQuantity(productId: string) {
     return this.cartService.getQuantity(productId);
   }
-  
+
   increase(product: Product) {
     if (!this.isAuthenticated()) {
       this.router.navigate(['/login']);
@@ -144,7 +84,7 @@ setView(mode: '1' | '2' | 'grid') {
     }
     this.cartService.increase(product.id);
   }
-  
+
   decrease(product: Product) {
     this.cartService.decrease(product.id);
   }
@@ -153,43 +93,11 @@ setView(mode: '1' | '2' | 'grid') {
     this.selectedCategory.set(category);
   }
 
-  placeOrder() {
-    const customer = this.authService.currentUser();
-    if (!customer) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    const lines = Array.from(this.cart().entries()).map(([productId, quantity]) => ({
-      productId,
-      quantity
-    }));
-
-    this.isOrdering.set(true);
-    this.errorMessage.set(null);
-
-    this.orderService.create({
-      customerId: customer.id,
-      lines
-    }).subscribe({
-      next: res => {
-        this.cart.set(new Map());
-        this.isOrdering.set(false);
-        if (res.possibleDuplicate) {
-          this.successMessage.set(this.transloco.translate('order.placed_duplicate'));
-        } else {
-          this.successMessage.set(this.transloco.translate('order.placed_success'));
-        }
-        setTimeout(() => this.successMessage.set(null), 5000);
-      },
-      error: () => {
-        this.errorMessage.set(this.transloco.translate('order.place_error'));
-        this.isOrdering.set(false);
-      }
-    });
+  getImage(product: Product): string {
+    return product.image || getProductImage(product.variety, product.category);
   }
 
-  logout() {
-    this.authService.logout();
+  onImageError(e: Event) {
+    (e.target as HTMLImageElement).style.display = 'none';
   }
 }

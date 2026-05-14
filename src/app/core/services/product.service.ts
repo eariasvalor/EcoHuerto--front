@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { Product, PageResponse } from '../model/product.model';
 import { environment } from '../../../environments/environment';
 
@@ -29,7 +30,14 @@ export class ProductService {
   private readonly http = inject(HttpClient);
   private readonly API = environment.apiUrl;
 
+  private readonly available$ = this.http
+    .get<PageResponse<Product>>(`${this.API}/products`, {
+      params: new HttpParams().set('page', 0).set('size', 20)
+    })
+    .pipe(shareReplay(1));
+
   getAvailable(page = 0, size = 20): Observable<PageResponse<Product>> {
+    if (page === 0 && size === 20) return this.available$;
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PageResponse<Product>>(`${this.API}/products`, { params });
   }
