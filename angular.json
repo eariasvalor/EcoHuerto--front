@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "HuertoCarlos-front": {
+    "EcoHuerto--front": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
